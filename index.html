@@ -1,0 +1,2739 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HackerKids CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --bg-body: #f4f6f9;
+      --border: #e2e8f0;
+      --sidebar-width: 240px;
+
+      --row-enrolled-bg: #e6f7f6;
+      --row-enrolled-border: #bceae6;
+      --row-rejected-bg: #fde8e8;
+      --row-rejected-border: #f8b4b4;
+      --row-archived-bg: #f1f5f9;
+      --row-archived-border: #cbd5e1;
+
+      --color-minecarft: #b9dcf7;
+      --border-minecarft: #60a5fa;
+      --color-roblox-thu: #fbcfe8;
+      --border-roblox-thu: #f87171;
+      --color-roblox-fri: #bbf7d0;
+      --border-roblox-fri: #34d399;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-body);
+      color: #1e293b;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Сайдбар для ПК / Мобильное выезжающее меню */
+    aside {
+      width: var(--sidebar-width);
+      background: #0f172a;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1050;
+    }
+    .brand {
+      padding: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      border-bottom: 1px solid #1e293b;
+      letter-spacing: -0.3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand span { color: #38bdf8; }
+    .btn-sidebar-close {
+      display: none;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .nav-menu { list-style: none; padding: 15px 0; flex: 1; }
+    .nav-item {
+      padding: 13px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: #1e293b;
+      color: #38bdf8;
+    }
+
+    /* Оверлей мобильного меню */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 1040;
+    }
+    .sidebar-overlay.active { display: block; }
+
+    /* Главная область */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    header {
+      background: #ffffff;
+      min-height: 64px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      gap: 12px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-mobile-burger {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #0f172a;
+    }
+    .header-title { font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .btn-create {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-create:hover { background: var(--primary-hover); }
+
+    .content-area {
+      padding: 20px;
+      max-width: 1600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-btn {
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .filter-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .filter-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+
+    /* Карточки записей */
+    .records-list, .groups-list, .lessons-table-list, .subscriptions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .record-card, .group-card, .lesson-row-card, .sub-card {
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      gap: 14px;
+    }
+    .record-card.enrolled { background-color: var(--row-enrolled-bg); border-color: var(--row-enrolled-border); }
+    .record-card.rejected { background-color: var(--row-rejected-bg); border-color: var(--row-rejected-border); }
+    .record-card.archived { background-color: var(--row-archived-bg); border-color: var(--row-archived-border); }
+
+    .col-info { flex: 2.2; min-width: 200px; }
+    .student-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    
+    .student-clickable-link {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0284c7;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .student-clickable-link:hover { text-decoration: underline; color: #0369a1; }
+
+    .badge-status { font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+    .parent-info { font-size: 13px; color: #64748b; }
+    
+    .col-contacts { flex: 1.3; min-width: 140px; font-size: 13px; }
+    .phone { font-weight: 600; margin-bottom: 2px; }
+    .age-badge { font-size: 12px; color: #64748b; }
+
+    .col-group-booking { flex: 2; min-width: 190px; font-size: 13px; }
+    .group-sub-title { font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px; }
+    .badge-booked-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #e0f2fe;
+      color: #0284c7;
+      border: 1px solid #bae6fd;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .badge-booked-date:hover { background: #bae6fd; }
+    .badge-no-booking {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fde68a;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .col-sub-finance { flex: 1.8; min-width: 160px; font-size: 13px; }
+    .paid-sum { font-weight: 700; color: #047857; font-size: 14px; }
+    .rem-lessons { font-size: 12px; font-weight: 600; color: #059669; margin-top: 1px; }
+    .rem-lessons.empty { color: #dc2626; }
+    .earned-total { font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; }
+
+    .btn-pay-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: #0284c7;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .btn-pay-link:hover { text-decoration: underline; color: #0369a1; }
+
+    .col-action { display: flex; align-items: center; gap: 8px; min-width: 180px; justify-content: flex-end; }
+    .select-record-status {
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(0,0,0,0.15);
+      background: #ffffff;
+      cursor: pointer;
+    }
+    .btn-icon-action {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .btn-delete:hover { background: #fee2e2; color: #ef4444; }
+
+    /* Группы */
+    .group-card { border-left: 6px solid var(--primary); position: relative; }
+    .group-program-badge { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+    .group-title { font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+    .group-meta-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .group-schedule { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: #2563eb; background: #eff6ff; padding: 4px 9px; border-radius: 6px; }
+    .group-lead { font-size: 13px; color: #475569; }
+    .capacity-box { background: #f8fafc; padding: 8px 14px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; }
+    .capacity-count { font-size: 15px; font-weight: 700; }
+    .capacity-bar { width: 100px; height: 6px; background: #e2e8f0; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+    .capacity-fill { height: 100%; background: var(--primary); }
+    .btn-group-students { background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* Абонементы */
+    .sub-card { border-left: 6px solid #10b981; padding: 18px 20px; background: #ffffff; }
+    .sub-card-title { font-size: 17px; font-weight: 700; color: #0f172a; }
+    .sub-card-lessons { font-size: 14px; font-weight: 600; color: #059669; margin: 4px 0; }
+    .sub-card-price { font-size: 18px; font-weight: 800; color: #047857; }
+    .sub-card-term { font-size: 13px; color: #64748b; }
+
+    /* Календарь адаптивный с горизонтальным скроллом */
+    .calendar-container {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow-x: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      -webkit-overflow-scrolling: touch;
+    }
+    .calendar-meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .cal-nav-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-cal-today {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #334155;
+    }
+    .cal-date-picker-wrap {
+      position: relative;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+    }
+    .cal-hidden-input {
+      position: absolute;
+      opacity: 0;
+      inset: 0;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn-cal-arrow {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #10b981;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: 70px repeat(7, minmax(130px, 1fr));
+      min-width: 980px;
+    }
+    .cal-header {
+      background: #f8fafc;
+      padding: 10px 6px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .cal-header:last-child { border-right: none; }
+    .cal-sub-header { font-size: 10px; font-weight: 400; color: #94a3b8; display: block; margin-top: 2px; }
+    .cal-time-col {
+      display: grid;
+      grid-template-rows: repeat(14, 52px);
+      border-right: 1px solid var(--border);
+      background: #fafafa;
+      position: sticky;
+      left: 0;
+      z-index: 20;
+    }
+    .cal-hour-cell {
+      border-bottom: 1px dashed #e2e8f0;
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cal-day-col {
+      display: grid;
+      grid-template-rows: repeat(14, 52px);
+      border-right: 1px solid var(--border);
+      position: relative;
+      background: #ffffff;
+    }
+    .cal-day-col:last-child { border-right: none; }
+    .cal-slot { border-bottom: 1px dashed #f1f5f9; height: 52px; }
+    
+    .cal-event-card {
+      position: absolute;
+      left: 3px;
+      right: 3px;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-top: 3px solid;
+      z-index: 10;
+    }
+    .cal-event-time { font-weight: 700; font-size: 10px; }
+    .cal-event-title { font-weight: 600; margin: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cal-event-seats { font-size: 10px; font-weight: 700; color: #0284c7; }
+
+    /* Таблица свободного времени */
+    .free-time-table { width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    .free-time-table th, .free-time-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; font-size: 13px; }
+    .free-time-table th { background: #f8fafc; font-weight: 600; color: #475569; }
+    .free-badge { display: inline-block; background: #ecfdf5; color: #047857; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 12px; margin: 3px; border: 1px solid #a7f3d0; }
+
+    /* Карточка профиля ученика */
+    .student-profile-header {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .profile-avatar-box { display: flex; gap: 16px; }
+    .profile-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #fed7aa;
+      color: #c2410c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .profile-name-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .profile-sub-info { font-size: 12px; color: #64748b; line-height: 1.5; }
+    .profile-balance-widget { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; min-width: 200px; text-align: right; }
+    .profile-balance-title { font-size: 12px; color: #64748b; margin-bottom: 2px; }
+    .profile-balance-val { font-size: 18px; font-weight: 800; color: #047857; }
+
+    .profile-nav-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      background: #ffffff;
+      padding: 4px 10px 0;
+      border-radius: 10px 10px 0 0;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .profile-tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      flex-shrink: 0;
+    }
+    .profile-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .profile-tab-content-card { background: #ffffff; border: 1px solid var(--border); border-radius: 0 0 10px 10px; padding: 18px; }
+
+    /* Окно О ЗАНЯТИИ */
+    .lesson-view-modal { max-width: 980px; width: 100%; }
+    .lesson-view-top-card {
+      background: #ffffff;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .lesson-badge-time {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .lesson-title-big { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    .lesson-meta-desc { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    .lesson-stats-pill-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      min-width: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .stat-row-item { display: flex; justify-content: space-between; align-items: center; }
+    .stat-label-icon { display: flex; align-items: center; gap: 6px; color: #475569; }
+    .stat-val-bold { font-weight: 700; color: #0f172a; }
+    .stat-val-bold.green { color: #16a34a; font-size: 14px; }
+
+    .conducted-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px dashed #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .lesson-action-subbar {
+      background: #fafafa;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .action-chips-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .btn-action-chip {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .lesson-custom-meta-banner {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .lesson-table-wrapper {
+      padding: 14px 20px;
+      background: #ffffff;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .lesson-students-table { width: 100%; border-collapse: collapse; min-width: 620px; }
+    .lesson-students-table th {
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      padding: 8px 10px;
+      border-bottom: 2px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .lesson-students-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 13px; }
+
+    .empty-lesson-banner {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 30px 16px;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .empty-banner-icon { font-size: 32px; margin-bottom: 8px; }
+    .empty-banner-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+    .empty-banner-desc { font-size: 12px; color: #64748b; max-width: 400px; margin: 0 auto 14px; }
+
+    /* Общие стили модалок */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 12px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      background: #ffffff;
+      width: 100%;
+      max-width: 540px;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+      overflow: hidden;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      background: var(--primary);
+      color: white;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .btn-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; line-height: 1; }
+    .modal-body { padding: 18px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+    .form-row { display: flex; gap: 10px; }
+    .form-group { margin-bottom: 12px; flex: 1; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      background: #ffffff;
+    }
+    .modal-footer {
+      padding: 12px 18px;
+      background: #f9fafb;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .btn-secondary { background: white; border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+    .btn-save { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    .balance-info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; }
+    .btn-presence-toggle { width: 32px; height: 32px; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; margin: 0 auto; }
+    .btn-presence-toggle.absent { background-color: #fecdd3; color: #9f1239; }
+    .btn-presence-toggle.present { background-color: #22c55e; color: #ffffff; }
+
+    .booking-tape-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-top: 10px; }
+    .booking-slots-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+    .slot-column { flex: 0 0 100px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 6px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .slot-box-btn { width: 34px; height: 34px; border-radius: 6px; border: 2px solid #cbd5e1; background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+    .slot-box-btn.booked { background-color: #38bdf8; border-color: #0284c7; color: #ffffff; }
+
+    .student-select-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; gap: 10px; }
+
+    /* --- МОБИЛЬНЫЙ АДАПТИВ (SMARTPHONES & TABLETS) --- */
+    @media (max-width: 900px) {
+      aside {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+      }
+      aside.open {
+        transform: translateX(0);
+      }
+      .btn-sidebar-close { display: block; }
+      .btn-mobile-burger { display: flex; }
+
+      header { padding: 10px 16px; }
+      .header-title { font-size: 17px; }
+      .content-area { padding: 14px; }
+
+      /* Карточки записей в столбик для мобильных */
+      .record-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px;
+      }
+      .col-info, .col-contacts, .col-group-booking, .col-sub-finance, .col-action {
+        width: 100%;
+        min-width: 0;
+      }
+      .col-contacts {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px dashed var(--border);
+        padding-top: 8px;
+      }
+      .col-group-booking {
+        border-top: 1px dashed var(--border);
+        padding-top: 8px;
+      }
+      .col-sub-finance {
+        border-top: 1px dashed var(--border);
+        padding-top: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .col-action {
+        border-top: 1px solid var(--border);
+        padding-top: 10px;
+        justify-content: space-between;
+      }
+
+      /* Группы */
+      .group-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      /* Профиль ученика */
+      .student-profile-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .profile-balance-widget {
+        text-align: left;
+        width: 100%;
+      }
+
+      /* Журнал урока */
+      .lesson-view-top-card {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .lesson-stats-pill-box {
+        width: 100%;
+        min-width: 0;
+      }
+      .lesson-action-subbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .action-chips-group {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      /* Формы модалок */
+      .form-row { flex-direction: column; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Затемнение для мобильного меню -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Сайдбар -->
+  <aside id="appSidebar">
+    <div class="brand">
+      <div>🚀 <span>HackerKids</span> CRM</div>
+      <button class="btn-sidebar-close" onclick="closeSidebar()">&times;</button>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item active" onclick="switchSection('records', this)">📋 Записи</li>
+      <li class="nav-item" onclick="switchSection('groups', this)">👥 Группы</li>
+      <li class="nav-item" onclick="switchSection('lessons', this)">📅 Занятия</li>
+      <li class="nav-item" onclick="switchSection('subscriptions', this)">💳 Абонементы</li>
+    </ul>
+  </aside>
+
+  <!-- Основной контент -->
+  <main>
+    <header>
+      <div class="header-left">
+        <button class="btn-mobile-burger" onclick="openSidebar()" title="Меню">☰</button>
+        <div class="header-title" id="pageTitle">Записи</div>
+      </div>
+      <div id="headerActionsArea">
+        <button class="btn-create" id="btnHeaderAction" onclick="openRecordModal()">+ Запись</button>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <!-- 1. ЗАПИСИ -->
+      <section id="sectionRecords">
+        <div class="filter-tabs">
+          <button class="filter-btn active" onclick="setRecordFilter('all', this)" id="tab-all">Все (0)</button>
+          <button class="filter-btn" onclick="setRecordFilter('enrolled', this)" id="tab-enrolled">Записан (0)</button>
+          <button class="filter-btn" onclick="setRecordFilter('rejected', this)" id="tab-rejected">Отказался (0)</button>
+          <button class="filter-btn" onclick="setRecordFilter('archived', this)" id="tab-archived">🗄️ Архив (0)</button>
+        </div>
+        <div class="records-list" id="recordsList"></div>
+      </section>
+
+      <!-- 2. ГРУППЫ -->
+      <section id="sectionGroups" style="display: none;">
+        <div style="margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:14px 18px; border-radius:10px; border:1px solid var(--border); flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-size:15px; font-weight:700; color:#0f172a;">Группы обучения</div>
+            <div style="font-size:12px; color:#64748b;">Управление составами, лимитами и расписанием</div>
+          </div>
+          <button class="btn-create" onclick="openGroupModal()">+ Новая группа</button>
+        </div>
+        <div class="groups-list" id="groupsList"></div>
+      </section>
+
+      <!-- 3. ЗАНЯТИЯ (КАЛЕНДАРЬ) -->
+      <section id="sectionLessons" style="display: none;">
+        <div class="filter-tabs">
+          <button class="filter-btn active" onclick="setLessonView('calendar', this)">🗓 Календарь</button>
+          <button class="filter-btn" onclick="setLessonView('list', this)">📃 Список</button>
+          <button class="filter-btn" onclick="setLessonView('freetime', this)">⌛ Свободное время</button>
+        </div>
+
+        <div id="viewCalendar" class="calendar-container">
+          <!-- Навигация по неделям -->
+          <div class="calendar-meta-bar">
+            <div class="cal-nav-group">
+              <button class="btn-cal-today" onclick="goToToday()">🔄 Сегодня</button>
+              
+              <div class="cal-date-picker-wrap" title="Нажмите, чтобы выбрать любое число календаря">
+                <span id="calWeekRangeLabel">28 сент. 2026 г. – 4 окт. 2026 г.</span>
+                <span style="font-size:12px; color:#64748b;">📅</span>
+                <input type="date" class="cal-hidden-input" id="calCustomDatePicker" onchange="onCustomDatePicked(this.value)">
+              </div>
+
+              <div style="display:flex; gap:6px;">
+                <button class="btn-cal-arrow" onclick="shiftWeek(-1)" title="Предыдущая неделя">‹</button>
+                <button class="btn-cal-arrow" onclick="shiftWeek(1)" title="Следующая неделя">›</button>
+              </div>
+            </div>
+
+            <div style="font-size:12px; color:#64748b; font-weight:600;">
+              Основная (GMT +3)
+            </div>
+          </div>
+
+          <div class="calendar-grid">
+            <div class="cal-header">Время</div>
+            <div class="cal-header" id="th-day-1">пн<span class="cal-sub-header">Основная</span></div>
+            <div class="cal-header" id="th-day-2">вт<span class="cal-sub-header">Основная</span></div>
+            <div class="cal-header" id="th-day-3">ср<span class="cal-sub-header">Основная</span></div>
+            <div class="cal-header" id="th-day-4">чт<span class="cal-sub-header">Основная</span></div>
+            <div class="cal-header" id="th-day-5">пт<span class="cal-sub-header">Основная</span></div>
+            <div class="cal-header" id="th-day-6">сб<span class="cal-sub-header">Основная</span></div>
+            <div class="cal-header" id="th-day-7">вс<span class="cal-sub-header">Основная</span></div>
+
+            <div class="cal-time-col" id="calTimeCol"></div>
+            <div class="cal-day-col" id="dayCol-1"></div>
+            <div class="cal-day-col" id="dayCol-2"></div>
+            <div class="cal-day-col" id="dayCol-3"></div>
+            <div class="cal-day-col" id="dayCol-4"></div>
+            <div class="cal-day-col" id="dayCol-5"></div>
+            <div class="cal-day-col" id="dayCol-6"></div>
+            <div class="cal-day-col" id="dayCol-7"></div>
+          </div>
+        </div>
+
+        <div id="viewList" class="lessons-table-list" style="display: none;"></div>
+
+        <div id="viewFreeTime" style="display: none; overflow-x: auto;">
+          <table class="free-time-table">
+            <thead>
+              <tr>
+                <th style="width: 180px;">День недели</th>
+                <th>Свободные окна для занятий (08:00 – 21:00)</th>
+              </tr>
+            </thead>
+            <tbody id="freeTimeTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 4. АБОНЕМЕНТЫ -->
+      <section id="sectionSubscriptions" style="display: none;">
+        <div style="margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:14px 18px; border-radius:10px; border:1px solid var(--border); flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-size:15px; font-weight:700; color:#0f172a;">Тарифная сетка абонементов</div>
+            <div style="font-size:12px; color:#64748b;">Уроки, цена и срок действия</div>
+          </div>
+          <button class="btn-create" onclick="openCreateSubModal()">+ Новый вид абонемента</button>
+        </div>
+        <div class="subscriptions-list" id="subscriptionsList"></div>
+      </section>
+
+      <!-- 5. КАРТОЧКА УЧЕНИКА -->
+      <section id="sectionStudentProfile" style="display: none;">
+        <div class="student-profile-header">
+          <div class="profile-avatar-box">
+            <div class="profile-avatar" id="spAvatar">ВБ</div>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span class="profile-name-title" id="spName">Владислав Бунаков</span>
+                <span class="badge-status" id="spStatusBadge" style="background:#e0f2fe; color:#0369a1;">Новый</span>
+              </div>
+              <div class="profile-sub-info" id="spInfoText"></div>
+              <div style="margin-top:8px;">
+                <button class="btn-create" style="padding:6px 12px; font-size:12px;" onclick="openEditStudentModal()">✏️ Редактировать данные</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-balance-widget">
+            <div class="profile-balance-title">Баланс занятий</div>
+            <div class="profile-balance-val" id="spRemainingVal">10 зан.</div>
+            <div style="font-size:12px; color:#64748b; margin-top:2px;" id="spMoneyVal">Остаток: 12 000 ₽</div>
+          </div>
+        </div>
+
+        <div class="profile-nav-tabs">
+          <button class="profile-tab-btn active" onclick="setProfileTab('lessons', this)">📅 Занятия</button>
+          <button class="profile-tab-btn" onclick="setProfileTab('groups', this)">👥 Группы</button>
+          <button class="profile-tab-btn" onclick="setProfileTab('subs', this)">💳 Абонементы</button>
+          <button class="profile-tab-btn" onclick="setProfileTab('payments', this)">💰 Оплаты и счета</button>
+        </div>
+
+        <div class="profile-tab-content-card" id="spTabContentArea"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- МОДАЛКА: СОЗДАНИЕ / РЕДАКТИРОВАНИЕ ГРУППЫ -->
+  <div class="modal-backdrop" id="modalGroupBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="groupModalTitle">Группа обучения</span>
+        <button class="btn-close" onclick="closeGroupModal()">&times;</button>
+      </div>
+      <form id="groupForm" onsubmit="handleGroupSubmit(event)">
+        <input type="hidden" id="editingGroupId">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Программа (предмет) *</label>
+              <input type="text" class="form-control" id="gProgram" placeholder="Напр. Roblox, Minecraft" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Название группы *</label>
+              <input type="text" class="form-control" id="gName" placeholder="Напр. №1 Ср 18:00" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">День недели *</label>
+              <select class="form-control" id="gDayOfWeek" required>
+                <option value="Понедельник">Понедельник</option>
+                <option value="Вторник">Вторник</option>
+                <option value="Среда">Среда</option>
+                <option value="Четверг">Четверг</option>
+                <option value="Пятница">Пятница</option>
+                <option value="Суббота">Суббота</option>
+                <option value="Воскресенье">Воскресенье</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Время начала *</label>
+              <input type="text" class="form-control" id="gTime" value="18:00" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Время окончания *</label>
+              <input type="text" class="form-control" id="gEndTime" value="19:30" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Цвет группы</label>
+              <input type="color" id="gColor" value="#b9dcf7" style="width:100%; height:38px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Макс. мест в группе</label>
+              <input type="number" class="form-control" id="gMaxSeats" value="8" min="1" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Ведущий группы</label>
+            <input type="text" class="form-control" id="gLead" placeholder="Илья" value="Илья">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Комментарий к группе</label>
+            <input type="text" class="form-control" id="gComment" placeholder="Заметки">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeGroupModal()">Отмена</button>
+          <button type="submit" class="btn-save">Сохранить группу</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: СОЗДАНИЕ / РЕДАКТИРОВАНИЕ АБОНЕМЕНТА -->
+  <div class="modal-backdrop" id="modalSubCreateBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="subModalTitle">Вид абонемента</span>
+        <button class="btn-close" onclick="closeCreateSubModal()">&times;</button>
+      </div>
+      <form id="subCreateForm" onsubmit="handleSubCreateSubmit(event)">
+        <input type="hidden" id="editingSubId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Название абонемента *</label>
+            <input type="text" class="form-control" id="subName" placeholder="Напр. 1 мес, 2 мес" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Кол-во занятий *</label>
+              <input type="number" class="form-control" id="subLessonsCount" placeholder="4" min="1" max="50" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Стоимость (₽) *</label>
+              <input type="number" class="form-control" id="subPrice" placeholder="6000" min="0" step="100" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Срок действия *</label>
+            <select class="form-control" id="subDuration" required>
+              <option value="1 месяц">1 месяц</option>
+              <option value="2 месяца">2 месяца</option>
+              <option value="3 месяца">3 месяца</option>
+              <option value="Бессрочный">Бессрочный</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeCreateSubModal()">Отмена</button>
+          <button type="submit" class="btn-save">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: РЕДАКТИРОВАНИЕ УЧЕНИКА -->
+  <div class="modal-backdrop" id="modalEditStudentBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Редактирование ученика</span>
+        <button class="btn-close" onclick="closeEditStudentModal()">&times;</button>
+      </div>
+      <form id="editStudentForm" onsubmit="handleEditStudentSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">ФИО Ученика *</label>
+            <input type="text" class="form-control" id="esName" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Статус ученика</label>
+            <select class="form-control" id="esStatus">
+              <option value="Новый">Новый</option>
+              <option value="Клиент">Клиент</option>
+              <option value="Отказ">Отказ</option>
+              <option value="Неактивный">Неактивный</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Телефон *</label>
+              <input type="tel" class="form-control" id="esPhone" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Возраст</label>
+              <input type="number" class="form-control" id="esAge">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ФИО родителя</label>
+            <input type="text" class="form-control" id="esParent">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Примечание</label>
+            <textarea class="form-control" id="esNote" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeEditStudentModal()">Отмена</button>
+          <button type="submit" class="btn-save">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ДОБАВЛЕНИЕ УЧЕНИКОВ В ГРУППУ -->
+  <div class="modal-backdrop" id="modalAddStudentsBackdrop">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <span class="modal-title" id="addStudentsModalTitle">Записать учеников в группу</span>
+        <button class="btn-close" onclick="closeAddStudentsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
+          Зеленым отмечены новые ученики без групп. Ученики из других групп также доступны для добавления.
+        </div>
+        <div id="studentSelectList"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-save" onclick="closeAddStudentsModal()">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ОПЛАТА АБОНЕМЕНТА (+ ПЛАТ/АБ) -->
+  <div class="modal-backdrop" id="modalPaySubBackdrop">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <span class="modal-title" id="payModalTitle">Оплата абонемента</span>
+        <button class="btn-close" onclick="closePaySubModal()">&times;</button>
+      </div>
+      <form id="paySubForm" onsubmit="handlePaySubSubmit(event)">
+        <div class="modal-body">
+          <div class="balance-info-card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <strong style="color:#0f172a;">Остатки по абонементам</strong>
+              <span style="color:#10b981; font-weight:700;" id="payCardStatus">Активен</span>
+            </div>
+            <div style="color:#475569;" id="payCardDetails">Ост. 0 зан.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Группа / предмет *</label>
+            <select class="form-control" id="payGroupSelect" required></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Новый абонемент на срок *</label>
+            <select class="form-control" id="payTariffSelect" required onchange="calcFinalPayment()"></select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Дата продажи *</label>
+              <input type="date" class="form-control" id="paySaleDate" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Тип скидки</label>
+              <select class="form-control" id="payDiscountType" onchange="calcFinalPayment()">
+                <option value="none">Без скидки</option>
+                <option value="percent">Скидка, %</option>
+                <option value="amount">Скидка, ₽</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Значение скидки</label>
+              <input type="number" class="form-control" id="payDiscountValue" value="0" min="0" oninput="calcFinalPayment()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Сумма к оплате (₽)</label>
+              <input type="number" class="form-control" id="payFinalAmount" style="font-weight:700; color:#047857;" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closePaySubModal()">Отменить</button>
+          <button type="submit" class="btn-save">Внести платеж</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ВЫБОР ДАТ -->
+  <div class="modal-backdrop" id="modalBookingDatesBackdrop">
+    <div class="modal" style="max-width: 680px;">
+      <div class="modal-header">
+        <span class="modal-title" id="mbTitle">Запись на занятия</span>
+        <button class="btn-close" onclick="closeBookingModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px;" id="mbStudentGroup"></div>
+        <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;" id="mbSubInfo"></div>
+
+        <div class="booking-tape-container">
+          <div class="booking-slots-scroll" id="bookingSlotsList"></div>
+          <div style="display:flex; gap:14px; margin-top:12px; font-size:12px; color:#475569;">
+            <div style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; border:1px solid #cbd5e1; background:#fff; border-radius:3px;"></div><span>не записан</span></div>
+            <div style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; background:#38bdf8; border-radius:3px;"></div><span>записан</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-save" onclick="closeBookingModal()">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- СТИЛЬНОЕ ОКНО «О ЗАНЯТИИ» -->
+  <div class="modal-backdrop" id="modalLessonDetailBackdrop">
+    <div class="modal lesson-view-modal">
+      <div class="modal-header">
+        <span class="modal-title">О занятии</span>
+        <button class="btn-close" onclick="closeLessonDetailModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 0;">
+        <div class="lesson-view-top-card">
+          <div style="flex: 1;">
+            <div class="lesson-badge-time" id="ldDateTimeBadge">
+              ⏰ ср, 23/09/2026 • 18:00 - 19:30
+            </div>
+            <div class="lesson-title-big">
+              <span id="ldGroupTitleText">Minecarft — №1 ср 18:00</span>
+              <span style="font-size:11px; font-weight:600; padding:2px 7px; border-radius:6px; background:#e0f2fe; color:#0369a1;" id="ldStatusTag">Набор открыт</span>
+            </div>
+            <div class="lesson-meta-desc">
+              <span>🏛 Аудитория: <strong>Основная</strong></span>
+              <span>👤 Преподаватель: <strong id="ldTeacherName">Илья</strong></span>
+            </div>
+          </div>
+
+          <div class="lesson-stats-pill-box">
+            <div class="stat-row-item">
+              <div class="stat-label-icon">👥 Записались:</div>
+              <div class="stat-val-bold" id="sumEnrolledCount">0</div>
+            </div>
+            <div class="stat-row-item">
+              <div class="stat-label-icon">👤 Пришли:</div>
+              <div class="stat-val-bold green" id="sumAttendedCount">0 (0%)</div>
+            </div>
+            <div class="stat-row-item">
+              <div class="stat-label-icon">💰 Доходность:</div>
+              <div class="stat-val-bold green" id="sumRevenueCount">0 ₽</div>
+            </div>
+            <label class="conducted-toggle-label">
+              <input type="checkbox" id="ldConductedCheckbox" onchange="toggleLessonConducted()">
+              <span>Отметка: Проведено</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="lesson-action-subbar">
+          <div class="action-chips-group">
+            <button class="btn-action-chip" onclick="openLessonActionPrompt('comment')">💬 + Общ Комм</button>
+            <button class="btn-action-chip" onclick="openLessonActionPrompt('homework')">📝 + Задание на урок</button>
+            <button class="btn-action-chip" onclick="openLessonActionPrompt('webinar')">🔗 + Ссылка вебинар</button>
+          </div>
+          <div>
+            <button class="btn-create" style="padding:6px 12px; font-size:12px;" onclick="promptEnrollStudentToCurrentLesson()">
+              + Записать ученика
+            </button>
+          </div>
+        </div>
+
+        <div class="lesson-custom-meta-banner" id="lessonCustomMetaBanner" style="display:none;"></div>
+
+        <div class="lesson-table-wrapper" id="lessonTableContainer">
+          <table class="lesson-students-table">
+            <thead>
+              <tr>
+                <th>Ученик</th>
+                <th>Статус на занятии</th>
+                <th style="text-align:center;">Посещение</th>
+                <th>Абонемент / Баланс</th>
+                <th>Доход за урок</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-save" onclick="closeLessonDetailModal()">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: СОЗДАНИЕ ЗАПИСИ УЧЕНИКА -->
+  <div class="modal-backdrop" id="modalRecordBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Новая запись ученика</span>
+        <button class="btn-close" onclick="closeRecordModal()">&times;</button>
+      </div>
+      <form id="recordForm" onsubmit="handleRecordSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Ученик *</label>
+            <input type="text" class="form-control" id="fStudent" placeholder="Иван Иванов" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Группа (предмет) *</label>
+            <select class="form-control" id="fGroupSelect">
+              <option value="">-- Без группы --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Тарифный абонемент</label>
+            <select class="form-control" id="fSubSelect"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Родитель</label>
+            <input type="text" class="form-control" id="fParent" placeholder="ФИО родителя">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Телефон *</label>
+              <input type="tel" class="form-control" id="fPhone" placeholder="+7 (999) 000-00-00" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Возраст</label>
+              <input type="number" class="form-control" id="fAge" placeholder="10">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Примечание к записи</label>
+            <textarea class="form-control" id="fNote" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeRecordModal()">Отмена</button>
+          <button type="submit" class="btn-save">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ВВОД ДАННЫХ ДЛЯ КНОПОК ДЕЙСТВИЯ -->
+  <div class="modal-backdrop" id="modalLessonActionPromptBackdrop">
+    <div class="modal" style="max-width: 460px;">
+      <div class="modal-header">
+        <span class="modal-title" id="actionPromptTitle">Добавить данные</span>
+        <button class="btn-close" onclick="closeLessonActionPrompt()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" id="actionPromptLabel">Введите текст</label>
+          <textarea class="form-control" id="actionPromptInput" rows="3" placeholder="Введите информацию..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeLessonActionPrompt()">Отмена</button>
+        <button type="button" class="btn-save" onclick="saveLessonActionPrompt()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- УПРАВЛЕНИЕ МОБИЛЬНЫМ МЕНЮ ---
+    function openSidebar() {
+      document.getElementById('appSidebar').classList.add('open');
+      document.getElementById('sidebarOverlay').classList.add('active');
+    }
+    function closeSidebar() {
+      document.getElementById('appSidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+
+    // 1. АБОНЕМЕНТЫ
+    const defaultSubscriptions = [
+      { id: 1, name: "1мес", lessonsCount: 4, price: 6000, duration: "1 месяц", lessonPrice: 1500 },
+      { id: 2, name: "2мес", lessonsCount: 8, price: 10800, duration: "2 месяца", lessonPrice: 1350 },
+      { id: 3, name: "3мес", lessonsCount: 12, price: 14400, duration: "3 месяца", lessonPrice: 1200 }
+    ];
+
+    // 2. ГРУППЫ
+    const defaultGroups = [
+      { id: 1, program: "Minecarft", name: "№1 ср 18:00", dayOfWeek: "Среда", time: "18:00", endTime: "19:30", color: "#b9dcf7", borderColor: "#60a5fa", maxSeats: 10, lead: "Илья", comment: "ComputerCraft Lua" },
+      { id: 2, program: "Roblox", name: "№3 чт 19:00", dayOfWeek: "Четверг", time: "19:00", endTime: "20:30", color: "#fbcfe8", borderColor: "#f87171", maxSeats: 10, lead: "Илья", comment: "Roblox Studio" },
+      { id: 3, program: "Roblox", name: "№2 пт 19:00", dayOfWeek: "Пятница", time: "19:00", endTime: "20:30", color: "#bbf7d0", borderColor: "#34d399", maxSeats: 8, lead: "Илья", comment: "Младшая группа 9-11 лет" }
+    ];
+
+    // 3. БАЗА ДЕТЕЙ
+    const defaultRecords = [
+      { id: 1, student: "Владислав Бунаков", studentStatus: "Новый", parent: "", phone: "+7 (000) 000-0000", age: 14, recordStatus: "enrolled", note: "", archived: false, groups: [3], subId: 3, subNumber: "№18744912", paidTotal: 14400, earnedTotal: 2400, remainingLessons: 10, bookedDates: ["2026-10-02"], subscriptionSlots: {"2026-10-02":"booked"} },
+      { id: 10, student: "Кондратьев Александр", studentStatus: "Новый", parent: "Виктория, 11 лет", phone: "+7 (960) 273-5333", age: 11, recordStatus: "enrolled", note: "", archived: false, groups: [3], subId: 2, subNumber: "№18397145", paidTotal: 30650, earnedTotal: 20250, remainingLessons: 8, bookedDates: ["2026-10-02"], subscriptionSlots: {"2026-10-02":"booked"} },
+      { id: 15, student: "Евгений Кудряшов", studentStatus: "Новый", parent: "Яна Благовещенская, 14 лет", phone: "+7 (911) 948-0150", age: 14, recordStatus: "enrolled", note: "", archived: false, groups: [3], subId: 1, subNumber: "№18397146", paidTotal: 39550, earnedTotal: 33550, remainingLessons: 4, bookedDates: ["2026-10-02"], subscriptionSlots: {"2026-10-02":"booked"} },
+      { id: 11, student: "Ксения Валисьева", studentStatus: "Новый", parent: "Станислав Васильев, 12 лет", phone: "+7 (911) 924-0416", age: 12, recordStatus: "rejected", note: "Дорого", archived: false, groups: [3], subId: 2, subNumber: "№18397147", paidTotal: 25000, earnedTotal: 25000, remainingLessons: 0, bookedDates: [], subscriptionSlots: {} },
+      { id: 12, student: "Николай Параскевопуло", studentStatus: "Новый", parent: "Анна, 12 лет", phone: "+7 (921) 973-3706", age: 12, recordStatus: "rejected", note: "Передумал", archived: false, groups: [3], subId: 1, subNumber: "№18397148", paidTotal: 25200, earnedTotal: 22200, remainingLessons: 2, bookedDates: [], subscriptionSlots: {} },
+      { id: 13, student: "Елисеев Илья", studentStatus: "Новый", parent: "Елисеева Анна, 11 лет", phone: "+7 (905) 219-3790", age: 11, recordStatus: "enrolled", note: "", archived: false, groups: [3], subId: 2, subNumber: "№18397149", paidTotal: 34750, earnedTotal: 34750, remainingLessons: 0, bookedDates: [], subscriptionSlots: {} },
+      { id: 14, student: "Шмелева Алина", studentStatus: "Новый", parent: "Шмелев Денис, 10 лет", phone: "+7 (995) 595-3289", age: 10, recordStatus: "enrolled", note: "", archived: false, groups: [3], subId: 2, subNumber: "№18397150", paidTotal: 34750, earnedTotal: 34750, remainingLessons: 0, bookedDates: [], subscriptionSlots: {} },
+      { id: 16, student: "Федор Семиколенов (Roblox)", studentStatus: "Клиент", parent: "-, 12 лет", phone: "+7 (921) 577-2273", age: 12, recordStatus: "rejected", note: "Дорого", archived: false, groups: [3], subId: 2, subNumber: "№18397151", paidTotal: 28750, earnedTotal: 28750, remainingLessons: 0, bookedDates: [], subscriptionSlots: {} },
+
+      { id: 2, student: "Илья Меркулов", studentStatus: "Новый", parent: "Ольга Меркулова, 10 лет", phone: "+7 (921) 419-8943", age: 10, recordStatus: "enrolled", note: "", archived: false, groups: [2], subId: 2, subNumber: "№18397152", paidTotal: 25050, earnedTotal: 14250, remainingLessons: 8, bookedDates: ["2026-10-01"], subscriptionSlots: {"2026-10-01":"booked"} },
+      { id: 4, student: "Дмитрий Дзюбина", studentStatus: "Новый", parent: "Анастасия Егорова", phone: "+7 (911) 913-5390", age: 11, recordStatus: "enrolled", note: "", archived: false, groups: [2], subId: 2, subNumber: "№18397153", paidTotal: 27000, earnedTotal: 16200, remainingLessons: 8, bookedDates: ["2026-10-01"], subscriptionSlots: {"2026-10-01":"booked"} },
+      { id: 7, student: "Палов Ярослав", studentStatus: "Новый", parent: "Екатерина", phone: "+7 (921) 408-7768", age: 11, recordStatus: "enrolled", note: "", archived: false, groups: [2], subId: 2, subNumber: "№18397154", paidTotal: 27000, earnedTotal: 16200, remainingLessons: 8, bookedDates: ["2026-10-01"], subscriptionSlots: {"2026-10-01":"booked"} },
+      { id: 9, student: "Митянин Платон", studentStatus: "Новый", parent: "Митянина Анастасия, 10 лет", phone: "+7 (981) 897-8981", age: 10, recordStatus: "enrolled", note: "", archived: false, groups: [2], subId: 1, subNumber: "№18397155", paidTotal: 19850, earnedTotal: 18350, remainingLessons: 1, bookedDates: ["2026-10-01"], subscriptionSlots: {"2026-10-01":"booked"} },
+      { id: 3, student: "Максим Белогубкин", studentStatus: "Новый", parent: "Иванова Ольга", phone: "+7 (981) 686-6129", age: 9, recordStatus: "enrolled", note: "", archived: false, groups: [2], subId: 1, subNumber: "№18397156", paidTotal: 12600, earnedTotal: 11100, remainingLessons: 1, bookedDates: [], subscriptionSlots: {} },
+      { id: 5, student: "Торопов Артем", studentStatus: "Отказ", parent: "Екатерина, 10 лет", phone: "+7 (911) 080-2529", age: 10, recordStatus: "rejected", note: "Иная", archived: false, groups: [2], subId: null, subNumber: "", paidTotal: 0, earnedTotal: 0, remainingLessons: 0, bookedDates: [], subscriptionSlots: {} },
+      { id: 6, student: "Кондратьев Егор", studentStatus: "Новый", parent: "Екатерина, 12 лет", phone: "+7 (951) 651-6384", age: 12, recordStatus: "rejected", note: "Дорого", archived: false, groups: [2], subId: 2, subNumber: "№18397157", paidTotal: 16250, earnedTotal: 16250, remainingLessons: 0, bookedDates: [], subscriptionSlots: {} },
+      { id: 8, student: "Савицкий Андрей", studentStatus: "Новый", parent: "Савицкий Ян, 11 лет", phone: "+7 (911) 175-0843", age: 11, recordStatus: "rejected", note: "Передумал", archived: false, groups: [2], subId: 1, subNumber: "№18397158", paidTotal: 5000, earnedTotal: 5000, remainingLessons: 0, bookedDates: [], subscriptionSlots: {} },
+
+      { id: 17, student: "Саша Шамарин", studentStatus: "Новый", parent: "Кирилл-Наталья, 10 лет", phone: "+7 (921) 326-6691", age: 10, recordStatus: "enrolled", note: "", archived: false, groups: [1], subId: 2, subNumber: "№18397159", paidTotal: 39600, earnedTotal: 28800, remainingLessons: 8, bookedDates: ["2026-09-30"], subscriptionSlots: {"2026-09-30":"booked"} },
+      { id: 19, student: "Андрей Сукач", studentStatus: "Клиент", parent: "Яна Сукач, 12 лет", phone: "+7 (911) 214-8128", age: 12, recordStatus: "enrolled", note: "Скидка за отзыв", archived: false, groups: [1], subId: 2, subNumber: "№18397160", paidTotal: 48400, earnedTotal: 38950, remainingLessons: 7, bookedDates: ["2026-09-30"], subscriptionSlots: {"2026-09-30":"booked"} },
+      { id: 20, student: "Костя Подемиров", studentStatus: "Клиент", parent: "-", phone: "+7 (911) 817-8469", age: 10, recordStatus: "enrolled", note: "", archived: false, groups: [1], subId: 2, subNumber: "№18397161", paidTotal: 44600, earnedTotal: 33800, remainingLessons: 8, bookedDates: ["2026-09-30"], subscriptionSlots: {"2026-09-30":"booked"} },
+      { id: 21, student: "Илья Горшков", studentStatus: "Клиент", parent: "Рая Горшкова, 11 лет", phone: "+7 (906) 228-8939", age: 11, recordStatus: "enrolled", note: "", archived: false, groups: [1], subId: 2, subNumber: "№18397162", paidTotal: 44600, earnedTotal: 33800, remainingLessons: 8, bookedDates: ["2026-09-30"], subscriptionSlots: {"2026-09-30":"booked"} },
+      { id: 18, student: "Орлов Никита", studentStatus: "Новый", parent: "Надежда Орлова, 9 лет", phone: "+7 (911) 780-9662", age: 9, recordStatus: "enrolled", note: "", archived: false, groups: [1], subId: 2, subNumber: "№18397163", paidTotal: 37250, earnedTotal: 37250, remainingLessons: 0, bookedDates: [], subscriptionSlots: {} }
+    ];
+
+    const defaultAttendanceLogs = {};
+
+    const STORAGE_KEY = 'hk_crm_mobile_ready_v2026';
+    let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+      subscriptions: defaultSubscriptions,
+      groups: defaultGroups,
+      records: defaultRecords,
+      attendanceLogs: defaultAttendanceLogs
+    };
+
+    let subscriptions = appData.subscriptions;
+    let groups = appData.groups;
+    let records = appData.records;
+    let attendanceLogs = appData.attendanceLogs;
+
+    let currentRecordFilter = 'all';
+    let currentLessonView = 'calendar';
+    let currentPayStudentId = null;
+    let currentTargetGroupId = null;
+    let currentActiveStudentId = null;
+    let currentProfileTab = 'lessons';
+    let previousSection = 'records';
+
+    let currentMonday = new Date(2026, 8, 28);
+    let activeLessonContext = null;
+    let activeActionPromptType = null;
+
+    function saveStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        subscriptions, groups, records, attendanceLogs
+      }));
+    }
+
+    // --- ПЕРЕКЛЮЧЕНИЕ РАЗДЕЛОВ ---
+    function switchSection(sec, el) {
+      closeSidebar();
+      if (sec !== 'profile') previousSection = sec;
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      document.getElementById('sectionRecords').style.display = (sec === 'records') ? 'block' : 'none';
+      document.getElementById('sectionGroups').style.display = (sec === 'groups') ? 'block' : 'none';
+      document.getElementById('sectionLessons').style.display = (sec === 'lessons') ? 'block' : 'none';
+      document.getElementById('sectionSubscriptions').style.display = (sec === 'subscriptions') ? 'block' : 'none';
+      document.getElementById('sectionStudentProfile').style.display = (sec === 'profile') ? 'block' : 'none';
+
+      const title = document.getElementById('pageTitle');
+      const headerArea = document.getElementById('headerActionsArea');
+
+      if (sec === 'records') {
+        title.innerText = 'Записи';
+        headerArea.innerHTML = `<button class="btn-create" onclick="openRecordModal()">+ Запись</button>`;
+        renderRecords();
+      } else if (sec === 'groups') {
+        title.innerText = 'Группы';
+        headerArea.innerHTML = `<button class="btn-create" onclick="openGroupModal()">+ Новая группа</button>`;
+        renderGroups();
+      } else if (sec === 'lessons') {
+        title.innerText = 'Занятия';
+        headerArea.innerHTML = '';
+        renderLessons();
+      } else if (sec === 'subscriptions') {
+        title.innerText = 'Абонементы';
+        headerArea.innerHTML = `<button class="btn-create" onclick="openCreateSubModal()">+ Новый вид абонемента</button>`;
+        renderSubscriptions();
+      } else if (sec === 'profile') {
+        const st = records.find(r => r.id === currentActiveStudentId);
+        title.innerHTML = `
+          <button style="background:none; border:none; cursor:pointer; font-size:16px; font-weight:700; color:#0284c7;" onclick="switchSection('${previousSection}')">⬅ Назад</button>
+          <span>Клиент: ${st ? escapeHtml(st.student) : ''}</span>
+        `;
+        headerArea.innerHTML = '';
+        renderStudentProfile();
+      }
+    }
+
+    // --- КАЛЕНДАРЬ ---
+    function shiftWeek(offset) {
+      currentMonday.setDate(currentMonday.getDate() + offset * 7);
+      renderLessons();
+    }
+
+    function goToToday() {
+      currentMonday = new Date(2026, 8, 28);
+      renderLessons();
+    }
+
+    function onCustomDatePicked(dateStr) {
+      if (!dateStr) return;
+      const picked = new Date(dateStr);
+      const day = picked.getDay() || 7;
+      picked.setDate(picked.getDate() - day + 1);
+      currentMonday = picked;
+      renderLessons();
+    }
+
+    function formatDateDotted(d) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      return `${day}.${month}`;
+    }
+
+    function getWeekDaysArray(monDate) {
+      const arr = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monDate);
+        d.setDate(d.getDate() + i);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dt = String(d.getDate()).padStart(2, '0');
+        arr.push({
+          dateObj: d,
+          isoDate: `${y}-${m}-${dt}`,
+          shortDay: ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'][d.getDay()],
+          dayName: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'][d.getDay()],
+          dayMonth: formatDateDotted(d)
+        });
+      }
+      return arr;
+    }
+
+    function renderLessons() {
+      if (currentLessonView === 'calendar') renderCalendarGrid();
+      else if (currentLessonView === 'list') renderLessonsList();
+      else renderFreeTime();
+    }
+
+    function renderCalendarGrid() {
+      const weekDays = getWeekDaysArray(currentMonday);
+      const sunday = weekDays[6].dateObj;
+
+      const monStr = `${currentMonday.getDate()} ${getMonthName(currentMonday.getMonth())} ${currentMonday.getFullYear()} г.`;
+      const sunStr = `${sunday.getDate()} ${getMonthName(sunday.getMonth())} ${sunday.getFullYear()} г.`;
+      document.getElementById('calWeekRangeLabel').innerText = `${monStr} – ${sunStr}`;
+
+      for (let i = 0; i < 7; i++) {
+        const th = document.getElementById(`th-day-${i + 1}`);
+        if (th) {
+          th.innerHTML = `${weekDays[i].shortDay}, ${weekDays[i].dayMonth}<span class="cal-sub-header">Основная</span>`;
+        }
+      }
+
+      const timeCol = document.getElementById('calTimeCol');
+      timeCol.innerHTML = '';
+      for (let h = 8; h <= 21; h++) {
+        timeCol.innerHTML += `<div class="cal-hour-cell">${String(h).padStart(2,'0')}:00</div>`;
+      }
+
+      for (let day = 1; day <= 7; day++) {
+        const col = document.getElementById(`dayCol-${day}`);
+        col.innerHTML = '';
+        for (let h = 8; h <= 21; h++) col.innerHTML += `<div class="cal-slot"></div>`;
+      }
+
+      const baseHour = 8;
+      const hourHeight = 52;
+
+      weekDays.forEach((wDay, dayIdx) => {
+        const col = document.getElementById(`dayCol-${dayIdx + 1}`);
+        const matchingGroups = groups.filter(g => g.dayOfWeek === wDay.dayName);
+
+        matchingGroups.forEach(grp => {
+          const [sh, sm] = (grp.time || '18:00').split(':').map(Number);
+          const [eh, em] = (grp.endTime || '19:30').split(':').map(Number);
+          const topPx = (((sh * 60 + sm) - (baseHour * 60)) / 60) * hourHeight;
+          const heightPx = (((eh * 60 + em) - (sh * 60 + sm)) / 60) * hourHeight;
+
+          const bookedStudents = records.filter(r => 
+            !r.archived && 
+            r.groups && r.groups.includes(grp.id) && 
+            r.bookedDates && r.bookedDates.includes(wDay.isoDate)
+          );
+          const count = bookedStudents.length;
+
+          const card = document.createElement('div');
+          card.className = 'cal-event-card';
+          card.style.top = `${topPx}px`;
+          card.style.height = `${heightPx}px`;
+          card.style.backgroundColor = grp.color || '#e0f2fe';
+          card.style.borderTopColor = grp.borderColor || '#0284c7';
+
+          card.innerHTML = `
+            <div>
+              <div class="cal-event-time">${grp.time}-${grp.endTime}</div>
+              <div class="cal-event-title">${escapeHtml(grp.program)} - ${escapeHtml(grp.name)}</div>
+            </div>
+            <div class="cal-event-seats" style="color: ${count > 0 ? '#0284c7' : '#64748b'};">
+              ${count}/${grp.maxSeats} ${count === 0 ? '(0 зан.)' : ''}
+            </div>
+          `;
+          card.onclick = () => openRecurringLessonDetail(grp.id, wDay.isoDate);
+          col.appendChild(card);
+        });
+      });
+    }
+
+    function getMonthName(m) {
+      return ['янв.', 'февр.', 'март.', 'апр.', 'мая', 'июн.', 'июл.', 'авг.', 'сент.', 'окт.', 'нояб.', 'дек.'][m];
+    }
+
+    function renderLessonsList() {
+      const list = document.getElementById('viewList');
+      list.innerHTML = '';
+      const weekDays = getWeekDaysArray(currentMonday);
+
+      let found = 0;
+      weekDays.forEach(wDay => {
+        const matchingGroups = groups.filter(g => g.dayOfWeek === wDay.dayName);
+        matchingGroups.forEach(grp => {
+          found++;
+          const booked = records.filter(r => !r.archived && r.groups && r.groups.includes(grp.id) && r.bookedDates && r.bookedDates.includes(wDay.isoDate));
+          const card = document.createElement('div');
+          card.className = 'lesson-row-card';
+          card.style.borderLeft = `6px solid ${grp.borderColor || '#0284c7'}`;
+          card.innerHTML = `
+            <div>
+              <div style="font-weight:700; font-size:15px;">${grp.program} — ${grp.name}</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">
+                📅 ${wDay.isoDate} (${wDay.dayName}) | ⏰ ${grp.time} - ${grp.endTime} | 👤 ${grp.lead}
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="font-weight:600; font-size:13px; color:#0f172a;">👥 ${booked.length}/${grp.maxSeats}</div>
+              <button class="btn-create" style="padding:6px 12px; font-size:12px;" onclick="openRecurringLessonDetail(${grp.id}, '${wDay.isoDate}')">Журнал</button>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      });
+
+      if (!found) {
+        list.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">На эту неделю нет регулярных занятий</div>';
+      }
+    }
+
+    function renderFreeTime() {
+      const tbody = document.getElementById('freeTimeTableBody');
+      tbody.innerHTML = '';
+      const weekDays = getWeekDaysArray(currentMonday);
+
+      weekDays.forEach(wDay => {
+        const matchingGroups = groups.filter(g => g.dayOfWeek === wDay.dayName);
+        let slots = ['08:00 - 20:00'];
+        if (matchingGroups.length) {
+          slots = ['08:00 - 18:00', '19:30 - 20:00'];
+        }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${wDay.shortDay}, ${wDay.dayMonth}</strong></td>
+          <td>${slots.map(s => `<span class="free-badge">${s}</span>`).join('')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setLessonView(v, btn) {
+      currentLessonView = v;
+      btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      document.getElementById('viewCalendar').style.display = (v === 'calendar') ? 'block' : 'none';
+      document.getElementById('viewList').style.display = (v === 'list') ? 'flex' : 'none';
+      document.getElementById('viewFreeTime').style.display = (v === 'freetime') ? 'block' : 'none';
+      renderLessons();
+    }
+
+    // --- ЖУРНАЛ УРОКА (О ЗАНЯТИИ) ---
+    function openClosestLessonModal(dateStr, grpId) {
+      openRecurringLessonDetail(grpId, dateStr);
+    }
+
+    function openRecurringLessonDetail(groupId, dateStr) {
+      const grp = groups.find(g => g.id === groupId);
+      if (!grp) return;
+
+      activeLessonContext = { groupId, dateStr };
+      const logKey = `${groupId}_${dateStr}`;
+      if (!attendanceLogs[logKey]) {
+        attendanceLogs[logKey] = {
+          topic: `${grp.program} — ${grp.name}`,
+          teacher: grp.lead || 'Илья',
+          conducted: false,
+          comment: "",
+          homework: "",
+          webinar: "",
+          records: {}
+        };
+      }
+
+      const log = attendanceLogs[logKey];
+      const dObj = new Date(dateStr);
+      const daysShort = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+      const shortDay = daysShort[dObj.getDay()] || '';
+      const [y, m, d] = dateStr.split('-');
+
+      document.getElementById('ldDateTimeBadge').innerText = `⏰ ${shortDay}, ${d}/${m}/${y} • ${grp.time} - ${grp.endTime}`;
+      document.getElementById('ldGroupTitleText').innerText = `${grp.program} — ${grp.name}`;
+      document.getElementById('ldTeacherName').innerText = grp.lead || 'Илья';
+      document.getElementById('ldConductedCheckbox').checked = !!log.conducted;
+
+      renderLessonMetaBanner(log);
+      renderAttendanceTable();
+      document.getElementById('modalLessonDetailBackdrop').classList.add('show');
+    }
+
+    function renderLessonMetaBanner(log) {
+      const banner = document.getElementById('lessonCustomMetaBanner');
+      const items = [];
+
+      if (log.comment) {
+        items.push(`<div>💬 <strong>Комментарий:</strong> ${escapeHtml(log.comment)} <button style="background:none;border:none;cursor:pointer;color:#0284c7;font-size:11px;" onclick="openLessonActionPrompt('comment')">изм.</button></div>`);
+      }
+      if (log.homework) {
+        items.push(`<div>📝 <strong>Задание:</strong> ${escapeHtml(log.homework)} <button style="background:none;border:none;cursor:pointer;color:#0284c7;font-size:11px;" onclick="openLessonActionPrompt('homework')">изм.</button></div>`);
+      }
+      if (log.webinar) {
+        items.push(`<div>🔗 <strong>Вебинар:</strong> <a href="${escapeHtml(log.webinar)}" target="_blank" style="color:#0284c7;font-weight:600;text-decoration:underline;">${escapeHtml(log.webinar)}</a> <button style="background:none;border:none;cursor:pointer;color:#0284c7;font-size:11px;" onclick="openLessonActionPrompt('webinar')">изм.</button></div>`);
+      }
+
+      if (items.length) {
+        banner.innerHTML = items.join('');
+        banner.style.display = 'flex';
+      } else {
+        banner.innerHTML = '';
+        banner.style.display = 'none';
+      }
+    }
+
+    function openLessonActionPrompt(type) {
+      if (!activeLessonContext) return;
+      activeActionPromptType = type;
+      const { groupId, dateStr } = activeLessonContext;
+      const logKey = `${groupId}_${dateStr}`;
+      const log = attendanceLogs[logKey] || {};
+
+      const titleEl = document.getElementById('actionPromptTitle');
+      const labelEl = document.getElementById('actionPromptLabel');
+      const inputEl = document.getElementById('actionPromptInput');
+
+      if (type === 'comment') {
+        titleEl.innerText = 'Общий комментарий к уроку';
+        labelEl.innerText = 'Текст комментария';
+        inputEl.placeholder = 'Повторить тему массивов...';
+        inputEl.value = log.comment || '';
+      } else if (type === 'homework') {
+        titleEl.innerText = 'Задание на урок';
+        labelEl.innerText = 'Тема и описание задания';
+        inputEl.placeholder = 'Создать чекпоинты в Roblox Studio...';
+        inputEl.value = log.homework || '';
+      } else if (type === 'webinar') {
+        titleEl.innerText = 'Ссылка на вебинар';
+        labelEl.innerText = 'URL ссылки';
+        inputEl.placeholder = 'https://zoom.us/j/... или https://discord.gg/...';
+        inputEl.value = log.webinar || '';
+      }
+
+      document.getElementById('modalLessonActionPromptBackdrop').classList.add('show');
+    }
+
+    function closeLessonActionPrompt() {
+      document.getElementById('modalLessonActionPromptBackdrop').classList.remove('show');
+    }
+
+    function saveLessonActionPrompt() {
+      if (!activeLessonContext || !activeActionPromptType) return;
+      const { groupId, dateStr } = activeLessonContext;
+      const logKey = `${groupId}_${dateStr}`;
+      if (!attendanceLogs[logKey]) {
+        attendanceLogs[logKey] = { records: {} };
+      }
+
+      const val = document.getElementById('actionPromptInput').value.trim();
+      attendanceLogs[logKey][activeActionPromptType] = val;
+
+      saveStorage();
+      closeLessonActionPrompt();
+      renderLessonMetaBanner(attendanceLogs[logKey]);
+    }
+
+    function renderAttendanceTable() {
+      if (!activeLessonContext) return;
+      const { groupId, dateStr } = activeLessonContext;
+      const grp = groups.find(g => g.id === groupId) || {};
+      const logKey = `${groupId}_${dateStr}`;
+      const log = attendanceLogs[logKey];
+
+      const tableContainer = document.getElementById('lessonTableContainer');
+
+      const bookedStudents = records.filter(r => 
+        !r.archived && 
+        r.groups && r.groups.includes(groupId) && 
+        r.bookedDates && r.bookedDates.includes(dateStr)
+      );
+
+      let attended = 0;
+      let totalRevenue = 0;
+
+      if (!bookedStudents.length) {
+        tableContainer.innerHTML = `
+          <div class="empty-lesson-banner">
+            <div class="empty-banner-icon">📋</div>
+            <div class="empty-banner-title">На это занятие (${dateStr}) пока никто не записан</div>
+            <div class="empty-banner-desc">
+              В группе «${escapeHtml(grp.name)}» есть ученики, которых можно распределить на этот день.
+            </div>
+            <button class="btn-create" onclick="promptEnrollStudentToCurrentLesson()">
+              + Записать ученика из группы
+            </button>
+          </div>
+        `;
+        document.getElementById('sumEnrolledCount').innerText = '0';
+        document.getElementById('sumAttendedCount').innerText = '0 (0%)';
+        document.getElementById('sumRevenueCount').innerText = '0 ₽';
+        return;
+      }
+
+      let rowsHtml = '';
+      bookedStudents.forEach(st => {
+        const sub = subscriptions.find(s => s.id === st.subId);
+        const lessonRate = sub ? sub.lessonPrice : 1350;
+
+        if (!log.records[st.id]) {
+          log.records[st.id] = { present: false, status: 'Записан' };
+        }
+        const isPresent = log.records[st.id].present;
+        if (isPresent) attended++;
+
+        let studentRev = 0;
+        let badge = '';
+        if (isPresent) {
+          studentRev = lessonRate;
+          badge = '<span style="color:#16a34a; font-weight:700;">Списано (был)</span>';
+        } else if (st.remainingLessons > 0) {
+          studentRev = lessonRate;
+          badge = '<span style="color:#0284c7; font-weight:700;">Списан пропуск</span>';
+        } else {
+          studentRev = 0;
+          badge = '<span style="color:#dc2626; font-weight:700;">Нет баланса (0 ₽)</span>';
+        }
+
+        totalRevenue += studentRev;
+        const initials = st.student.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
+        rowsHtml += `
+          <tr>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#fed7aa; color:#c2410c; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px;">
+                  ${initials}
+                </div>
+                <div>
+                  <span class="student-clickable-link" onclick="openStudentProfile(${st.id})">
+                    ${escapeHtml(st.student)}
+                  </span>
+                  <div style="font-size:11px; color:#64748b;">${escapeHtml(st.phone)}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge-status" style="background:#e0f2fe; color:#0369a1; font-weight:700;">
+                Записан на дату
+              </span>
+            </td>
+            <td style="text-align:center;">
+              <button class="btn-presence-toggle ${isPresent ? 'present' : 'absent'}" onclick="toggleRecurringAttendance(${st.id})">
+                ${isPresent ? '✔' : ''}
+              </button>
+            </td>
+            <td>
+              <div style="font-weight:700; color:#0f172a;">${sub ? sub.name : 'Абонемент'}</div>
+              <div style="font-size:11px; font-weight:600; color:${st.remainingLessons > 0 ? '#16a34a':'#dc2626'};">
+                Осталось: ${st.remainingLessons || 0} зан.
+              </div>
+            </td>
+            <td>
+              <div style="font-weight:800; font-size:13px; color:${studentRev > 0 ? '#16a34a':'#64748b'};">
+                ${studentRev.toLocaleString()} ₽
+              </div>
+              <div style="font-size:11px;">${badge}</div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tableContainer.innerHTML = `
+        <table class="lesson-students-table">
+          <thead>
+            <tr>
+              <th>Ученик</th>
+              <th>Статус на занятии</th>
+              <th style="text-align:center;">Посещение</th>
+              <th>Абонемент / Баланс</th>
+              <th>Доход за урок</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('sumEnrolledCount').innerText = `${bookedStudents.length}`;
+      document.getElementById('sumAttendedCount').innerText = `${attended} (${Math.round(attended/bookedStudents.length*100)}%)`;
+      document.getElementById('sumRevenueCount').innerText = `${totalRevenue.toLocaleString()} ₽`;
+    }
+
+    function promptEnrollStudentToCurrentLesson() {
+      if (!activeLessonContext) return;
+      const { groupId, dateStr } = activeLessonContext;
+      const grp = groups.find(g => g.id === groupId);
+
+      const candidates = records.filter(r => 
+        !r.archived && 
+        r.groups && r.groups.includes(groupId) && 
+        (!r.bookedDates || !r.bookedDates.includes(dateStr))
+      );
+
+      if (!candidates.length) {
+        alert("Все ученики этой группы уже записаны на данный день!");
+        return;
+      }
+
+      const namesList = candidates.map((c, i) => `${i + 1}. ${c.student}`).join('\n');
+      const choice = prompt(`Выберите номер ученика для записи на ${dateStr}:\n\n${namesList}`);
+      const idx = parseInt(choice) - 1;
+
+      if (!isNaN(idx) && candidates[idx]) {
+        const student = candidates[idx];
+        if (!student.bookedDates) student.bookedDates = [];
+        if (!student.subscriptionSlots) student.subscriptionSlots = {};
+
+        student.bookedDates.push(dateStr);
+        student.subscriptionSlots[dateStr] = 'booked';
+        student.bookedDates.sort();
+
+        saveStorage();
+        renderAttendanceTable();
+        renderRecords();
+        renderLessons();
+      }
+    }
+
+    function toggleLessonConducted() {
+      if (!activeLessonContext) return;
+      const { groupId, dateStr } = activeLessonContext;
+      const logKey = `${groupId}_${dateStr}`;
+      if (attendanceLogs[logKey]) {
+        attendanceLogs[logKey].conducted = document.getElementById('ldConductedCheckbox').checked;
+        saveStorage();
+      }
+    }
+
+    function toggleRecurringAttendance(studentId) {
+      if (!activeLessonContext) return;
+      const { groupId, dateStr } = activeLessonContext;
+      const logKey = `${groupId}_${dateStr}`;
+      const log = attendanceLogs[logKey];
+      const st = records.find(r => r.id === studentId);
+      if (!log || !st) return;
+
+      const sub = subscriptions.find(s => s.id === st.subId);
+      const lessonRate = sub ? sub.lessonPrice : 1350;
+
+      const willBePresent = !log.records[studentId].present;
+      log.records[studentId].present = willBePresent;
+
+      if (willBePresent) {
+        if (st.remainingLessons > 0) st.remainingLessons -= 1;
+        st.earnedTotal = (st.earnedTotal || 0) + lessonRate;
+      } else {
+        st.remainingLessons += 1;
+        st.earnedTotal = Math.max(0, (st.earnedTotal || 0) - lessonRate);
+      }
+
+      saveStorage();
+      renderAttendanceTable();
+      renderRecords();
+      renderLessons();
+      if (currentActiveStudentId === st.id) renderStudentProfile();
+    }
+
+    function closeLessonDetailModal() {
+      document.getElementById('modalLessonDetailBackdrop').classList.remove('show');
+    }
+
+    // --- РЕНДЕР ГРУПП С РЕДАКТИРОВАНИЕМ ---
+    function renderGroups() {
+      const list = document.getElementById('groupsList');
+      list.innerHTML = '';
+
+      groups.forEach(g => {
+        const enrolledStudents = records.filter(r => !r.archived && r.groups && r.groups.includes(g.id));
+        const count = enrolledStudents.length;
+        const max = g.maxSeats || 8;
+        const freeSeats = Math.max(0, max - count);
+        const pct = Math.min(100, Math.round((count / max) * 100));
+
+        const card = document.createElement('div');
+        card.className = 'group-card';
+        card.style.borderLeftColor = g.borderColor || '#10b981';
+
+        card.innerHTML = `
+          <div style="flex: 2;">
+            <div class="group-program-badge">${escapeHtml(g.program)}</div>
+            <div class="group-title">${escapeHtml(g.name)}</div>
+            <div class="group-meta-badges">
+              <span class="group-schedule">⏰ ${g.dayOfWeek || ''}, ${g.time || ''} - ${g.endTime || ''}</span>
+            </div>
+            <div class="group-lead">👤 Ведущий: <strong>${escapeHtml(g.lead || 'Не назначен')}</strong></div>
+            ${g.comment ? `<div style="font-size:12px; color:#64748b; margin-top:4px;">💬 ${escapeHtml(g.comment)}</div>` : ''}
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div class="capacity-box">
+              <div class="capacity-count">Свободно: ${freeSeats} <span style="font-weight:400;color:#64748b;font-size:12px;">из ${max}</span></div>
+              <div class="capacity-bar">
+                <div class="capacity-fill" style="width: ${pct}%; background: ${g.borderColor || '#10b981'};"></div>
+              </div>
+            </div>
+
+            <button class="btn-group-students" onclick="openAddStudentsModal(${g.id})">
+              + Записать ученика (${count})
+            </button>
+            <button class="btn-icon-action" style="font-size:16px;" onclick="editGroup(${g.id})" title="Редактировать">✏️</button>
+            <button class="btn-icon-action btn-delete" onclick="deleteGroup(${g.id})" title="Удалить">🗑️</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function openGroupModal() {
+      document.getElementById('groupForm').reset();
+      document.getElementById('editingGroupId').value = '';
+      document.getElementById('groupModalTitle').innerText = 'Создание новой группы';
+      document.getElementById('modalGroupBackdrop').classList.add('show');
+    }
+    function closeGroupModal() {
+      document.getElementById('modalGroupBackdrop').classList.remove('show');
+    }
+    function editGroup(id) {
+      const g = groups.find(x => x.id === id);
+      if (!g) return;
+      document.getElementById('editingGroupId').value = g.id;
+      document.getElementById('gProgram').value = g.program;
+      document.getElementById('gName').value = g.name;
+      document.getElementById('gDayOfWeek').value = g.dayOfWeek;
+      document.getElementById('gTime').value = g.time;
+      document.getElementById('gEndTime').value = g.endTime;
+      document.getElementById('gColor').value = g.color || '#b9dcf7';
+      document.getElementById('gMaxSeats').value = g.maxSeats;
+      document.getElementById('gLead').value = g.lead;
+      document.getElementById('gComment').value = g.comment || '';
+      document.getElementById('groupModalTitle').innerText = 'Редактирование группы';
+      document.getElementById('modalGroupBackdrop').classList.add('show');
+    }
+    function handleGroupSubmit(e) {
+      e.preventDefault();
+      const editingId = document.getElementById('editingGroupId').value;
+      const gData = {
+        program: document.getElementById('gProgram').value.trim(),
+        name: document.getElementById('gName').value.trim(),
+        dayOfWeek: document.getElementById('gDayOfWeek').value,
+        time: document.getElementById('gTime').value.trim(),
+        endTime: document.getElementById('gEndTime').value.trim(),
+        color: document.getElementById('gColor').value,
+        borderColor: document.getElementById('gColor').value,
+        maxSeats: parseInt(document.getElementById('gMaxSeats').value) || 8,
+        lead: document.getElementById('gLead').value.trim(),
+        comment: document.getElementById('gComment').value.trim()
+      };
+
+      if (editingId) {
+        const g = groups.find(x => x.id === parseInt(editingId));
+        if (g) Object.assign(g, gData);
+      } else {
+        groups.push({ id: Date.now(), ...gData });
+      }
+      saveStorage();
+      closeGroupModal();
+      renderGroups();
+      renderLessons();
+    }
+    function deleteGroup(id) {
+      if (confirm('Удалить эту группу?')) {
+        groups = groups.filter(g => g.id !== id);
+        saveStorage();
+        renderGroups();
+        renderLessons();
+      }
+    }
+
+    // --- РЕНДЕР АБОНЕМЕНТОВ С РЕДАКТИРОВАНИЕМ ---
+    function renderSubscriptions() {
+      const listEl = document.getElementById('subscriptionsList');
+      listEl.innerHTML = '';
+      subscriptions.forEach(sub => {
+        const card = document.createElement('div');
+        card.className = 'sub-card';
+        card.innerHTML = `
+          <div>
+            <div class="sub-card-title">${escapeHtml(sub.name)}</div>
+            <div class="sub-card-lessons">Занятий: <strong>${sub.lessonsCount}</strong> • Срок: <strong>${sub.duration}</strong></div>
+            <div class="sub-card-term">Расчётная стоимость 1 урока: <strong>${Math.round(sub.price / sub.lessonsCount)} ₽</strong></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="sub-card-price">${sub.price.toLocaleString()} ₽</div>
+            <button class="btn-icon-action" onclick="editSub(${sub.id})" title="Редактировать">✏️</button>
+            <button class="btn-icon-action btn-delete" onclick="deleteSubscription(${sub.id})" title="Удалить">🗑️</button>
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+    }
+
+    function openCreateSubModal() {
+      document.getElementById('subCreateForm').reset();
+      document.getElementById('editingSubId').value = '';
+      document.getElementById('subModalTitle').innerText = 'Новый вид абонемента';
+      document.getElementById('modalSubCreateBackdrop').classList.add('show');
+    }
+    function closeCreateSubModal() {
+      document.getElementById('modalSubCreateBackdrop').classList.remove('show');
+    }
+    function editSub(id) {
+      const s = subscriptions.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('editingSubId').value = s.id;
+      document.getElementById('subName').value = s.name;
+      document.getElementById('subLessonsCount').value = s.lessonsCount;
+      document.getElementById('subPrice').value = s.price;
+      document.getElementById('subDuration').value = s.duration;
+      document.getElementById('subModalTitle').innerText = 'Редактирование абонемента';
+      document.getElementById('modalSubCreateBackdrop').classList.add('show');
+    }
+    function handleSubCreateSubmit(e) {
+      e.preventDefault();
+      const editingId = document.getElementById('editingSubId').value;
+      const count = parseInt(document.getElementById('subLessonsCount').value);
+      const price = parseInt(document.getElementById('subPrice').value);
+      const data = {
+        name: document.getElementById('subName').value.trim(),
+        lessonsCount: count,
+        price: price,
+        duration: document.getElementById('subDuration').value,
+        lessonPrice: Math.round(price / count)
+      };
+
+      if (editingId) {
+        const s = subscriptions.find(x => x.id === parseInt(editingId));
+        if (s) Object.assign(s, data);
+      } else {
+        subscriptions.push({ id: Date.now(), ...data });
+      }
+      saveStorage();
+      closeCreateSubModal();
+      renderSubscriptions();
+      renderRecords();
+    }
+    function deleteSubscription(id) {
+      if (confirm('Удалить этот абонемент?')) {
+        subscriptions = subscriptions.filter(s => s.id !== id);
+        saveStorage();
+        renderSubscriptions();
+      }
+    }
+
+    // --- РЕНДЕР ЗАПИСЕЙ ---
+    function renderRecords() {
+      const listEl = document.getElementById('recordsList');
+      listEl.innerHTML = '';
+
+      const active = records.filter(r => !r.archived);
+      const archived = records.filter(r => r.archived);
+
+      document.getElementById('tab-all').innerText = `Все (${active.length})`;
+      document.getElementById('tab-enrolled').innerText = `Записан (${active.filter(r => r.recordStatus === 'enrolled').length})`;
+      document.getElementById('tab-rejected').innerText = `Отказался (${active.filter(r => r.recordStatus === 'rejected').length})`;
+      document.getElementById('tab-archived').innerText = `🗄️ Архив (${archived.length})`;
+
+      let displayed = (currentRecordFilter === 'archived') ? archived : active;
+      if (currentRecordFilter === 'enrolled' || currentRecordFilter === 'rejected') {
+        displayed = active.filter(r => r.recordStatus === currentRecordFilter);
+      }
+
+      displayed.forEach(rec => {
+        const card = document.createElement('div');
+        card.className = `record-card ${rec.archived ? 'archived' : rec.recordStatus}`;
+
+        const grp = groups.find(g => rec.groups && rec.groups.includes(g.id));
+        const hasGroup = !!grp;
+        const hasDate = rec.bookedDates && rec.bookedDates.length > 0;
+        const closestDate = hasDate ? rec.bookedDates[0] : null;
+
+        card.innerHTML = `
+          <div class="col-info">
+            <div class="student-name-row">
+              <span class="student-clickable-link" onclick="openStudentProfile(${rec.id})" title="Открыть подробную карточку ученика">
+                👤 ${escapeHtml(rec.student)}
+              </span>
+              <span class="badge-status" style="background:${rec.studentStatus === 'Отказ' ? '#fecaca' : (rec.studentStatus === 'Клиент' ? '#bbf7d0' : '#e0f2fe')}; color:${rec.studentStatus === 'Отказ' ? '#b91c1c' : (rec.studentStatus === 'Клиент' ? '#15803d' : '#0369a1')};">${rec.studentStatus}</span>
+            </div>
+            <div class="parent-info">${rec.parent ? escapeHtml(rec.parent) : 'Родитель не указан'}</div>
+          </div>
+
+          <div class="col-contacts">
+            <div class="phone">${escapeHtml(rec.phone)}</div>
+            <div class="age-badge">${rec.age ? rec.age + ' лет' : ''}</div>
+          </div>
+
+          <div class="col-group-booking">
+            <div class="group-sub-title">
+              ${hasGroup ? `📘 ${grp.program} — ${grp.name}` : '<span style="color:#ef4444;">⚠ Группа не выбрана</span>'}
+            </div>
+            <div>
+              ${
+                !hasGroup 
+                ? `<span style="font-size:12px; color:#94a3b8;">(Сначала укажите группу)</span>`
+                : hasDate 
+                  ? `<span class="badge-booked-date" onclick="openClosestLessonModal('${closestDate}', ${grp.id})" title="Открыть урок">Запись на ${formatDateShort(closestDate)} ↗</span>`
+                  : `<span class="badge-no-booking" onclick="openBookingDatesModal(${rec.id})" title="Выбрать даты">Нет записи на дату</span>`
+              }
+            </div>
+          </div>
+
+          <div class="col-sub-finance">
+            <div>
+              <div class="paid-sum">Внес ${rec.paidTotal || 0} ₽</div>
+              <div class="rem-lessons ${rec.remainingLessons > 0 ? '' : 'empty'}">
+                ${rec.remainingLessons > 0 ? `Осталось ${rec.remainingLessons} зан.` : 'Осталось 0 зан.'}
+              </div>
+            </div>
+            <div>
+              <button class="btn-pay-link" onclick="openPaySubModal(${rec.id})">+ Плат/Аб</button>
+              <div class="earned-total">Получено: ${(rec.earnedTotal || 0).toLocaleString()} ₽</div>
+            </div>
+          </div>
+
+          <div class="col-action">
+            <button class="btn-icon-action" style="${hasGroup ? 'background:#eff6ff; color:#2563eb;' : 'background:#f1f5f9; color:#94a3b8; cursor:not-allowed;'}" 
+              onclick="${hasGroup ? `openBookingDatesModal(${rec.id})` : `alert('Сначала привяжите ученика к группе!')`}">
+              📅 Даты
+            </button>
+            <select class="select-record-status" onchange="updateRecordStatus(${rec.id}, this.value)">
+              <option value="enrolled" ${rec.recordStatus === 'enrolled' ? 'selected' : ''}>Записан</option>
+              <option value="rejected" ${rec.recordStatus === 'rejected' ? 'selected' : ''}>Отказался</option>
+            </select>
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+    }
+
+    function formatDateShort(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      return `${parts[2]}/${parts[1]}`;
+    }
+
+    // --- КАРТОЧКА УЧЕНИКА ---
+    function openStudentProfile(studentId) {
+      currentActiveStudentId = studentId;
+      currentProfileTab = 'lessons';
+      switchSection('profile', null);
+    }
+
+    function renderStudentProfile() {
+      const st = records.find(r => r.id === currentActiveStudentId);
+      if (!st) return;
+
+      const sub = subscriptions.find(s => s.id === st.subId);
+      const initials = st.student.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      document.getElementById('spAvatar').innerText = initials;
+      document.getElementById('spName').innerText = st.student;
+      document.getElementById('spStatusBadge').innerText = st.studentStatus;
+
+      document.getElementById('spInfoText').innerHTML = `
+        📞 ${escapeHtml(st.phone)} | 🎂 Возраст: ${st.age ? st.age + ' лет' : 'не указан'} | 👤 Родитель: ${st.parent ? escapeHtml(st.parent) : '—'}<br>
+        📝 Примечание: ${st.note ? escapeHtml(st.note) : 'нет заметок'}
+      `;
+
+      document.getElementById('spRemainingVal').innerText = `${st.remainingLessons || 0} зан.`;
+      document.getElementById('spMoneyVal').innerText = `Остаток: ${((st.remainingLessons || 0) * (sub ? sub.lessonPrice : 1200)).toLocaleString()} ₽`;
+
+      renderProfileTabContent();
+    }
+
+    function setProfileTab(tab, btn) {
+      currentProfileTab = tab;
+      document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderProfileTabContent();
+    }
+
+    function renderProfileTabContent() {
+      const st = records.find(r => r.id === currentActiveStudentId);
+      const container = document.getElementById('spTabContentArea');
+      if (!st) return;
+
+      if (currentProfileTab === 'lessons') {
+        const studentGrp = groups.find(g => st.groups && st.groups.includes(g.id));
+        const dates = st.bookedDates || [];
+        container.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:14px; font-weight:700;">Предстоящие уроки (${dates.length})</div>
+            <button class="btn-create" style="padding:6px 12px; font-size:12px;" onclick="openBookingDatesModal(${st.id})">📅 Изменить даты</button>
+          </div>
+          ${dates.length ? `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              ${dates.map(d => `
+                <div style="padding:10px 14px; border:1px solid #e2e8f0; border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+                  <div><strong>📅 ${d}</strong> — ${studentGrp ? studentGrp.name : 'Группа'} (${studentGrp ? studentGrp.time : '19:00'})</div>
+                  <span style="font-weight:600; color:#0284c7; font-size:12px;">Записан</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : '<div style="color:#94a3b8; padding:20px; text-align:center;">Нет забронированных дат</div>'}
+        `;
+      } else if (currentProfileTab === 'groups') {
+        const grpList = groups.filter(g => st.groups && st.groups.includes(g.id));
+        container.innerHTML = `
+          <div style="font-size:14px; font-weight:700; margin-bottom:12px;">Группы ученика (${grpList.length})</div>
+          ${grpList.length ? grpList.map(g => `
+            <div style="padding:12px; border:1px solid #e2e8f0; border-left:6px solid ${g.borderColor}; border-radius:8px; margin-bottom:8px;">
+              <div style="font-weight:700; font-size:15px;">${g.program} — ${g.name}</div>
+              <div style="font-size:12px; color:#2563eb; margin-top:2px;">⏰ ${g.dayOfWeek}, ${g.time} - ${g.endTime}</div>
+              <div style="font-size:12px; color:#64748b; margin-top:2px;">Ведущий: ${g.lead}</div>
+            </div>
+          `).join('') : '<div style="color:#94a3b8; padding:20px; text-align:center;">Не добавлен в группы</div>'}
+        `;
+      } else if (currentProfileTab === 'subs') {
+        const sub = subscriptions.find(s => s.id === st.subId);
+        container.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:14px; font-weight:700;">Действующий абонемент</div>
+            <button class="btn-create" style="padding:6px 12px; font-size:12px;" onclick="openPaySubModal(${st.id})">+ Оплатить</button>
+          </div>
+          <div style="padding:14px; border:1px solid #e2e8f0; border-left:6px solid #10b981; border-radius:8px; background:#f8fafc;">
+            <div style="font-weight:800; font-size:16px; color:#0f172a;">Аб. ${st.subNumber || '№18744912'} (${sub ? sub.name : 'Индивидуальный'})</div>
+            <div style="font-size:13px; margin-top:4px; color:#059669; font-weight:600;">Осталось уроков: ${st.remainingLessons || 0} из ${sub ? sub.lessonsCount : 12}</div>
+            <div style="font-size:12px; color:#64748b; margin-top:2px;">Всего оплачено: ${st.paidTotal || 0} ₽</div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div style="font-size:14px; font-weight:700; margin-bottom:12px;">История платежей и списаний</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="padding:10px 14px; border:1px solid #e2e8f0; border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:#ecfdf5;">
+              <div><strong>Внесение оплаты</strong><div style="font-size:11px; color:#64748b;">Безналичный расчет</div></div>
+              <div style="font-weight:800; color:#15803d; font-size:14px;">+${st.paidTotal || 0} ₽</div>
+            </div>
+            <div style="padding:10px 14px; border:1px solid #e2e8f0; border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+              <div><strong>Списано за проведенные уроки</strong><div style="font-size:11px; color:#64748b;">Списания с баланса</div></div>
+              <div style="font-weight:800; color:#0f172a; font-size:14px;">-${st.earnedTotal || 0} ₽</div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function openEditStudentModal() {
+      const st = records.find(r => r.id === currentActiveStudentId);
+      if (!st) return;
+      document.getElementById('esName').value = st.student;
+      document.getElementById('esStatus').value = st.studentStatus;
+      document.getElementById('esPhone').value = st.phone;
+      document.getElementById('esAge').value = st.age || '';
+      document.getElementById('esParent').value = st.parent || '';
+      document.getElementById('esNote').value = st.note || '';
+      document.getElementById('modalEditStudentBackdrop').classList.add('show');
+    }
+    function closeEditStudentModal() {
+      document.getElementById('modalEditStudentBackdrop').classList.remove('show');
+    }
+    function handleEditStudentSubmit(e) {
+      e.preventDefault();
+      const st = records.find(r => r.id === currentActiveStudentId);
+      if (!st) return;
+      st.student = document.getElementById('esName').value.trim();
+      st.studentStatus = document.getElementById('esStatus').value;
+      st.phone = document.getElementById('esPhone').value.trim();
+      st.age = parseInt(document.getElementById('esAge').value) || null;
+      st.parent = document.getElementById('esParent').value.trim();
+      st.note = document.getElementById('esNote').value.trim();
+      saveStorage();
+      closeEditStudentModal();
+      renderStudentProfile();
+      renderRecords();
+    }
+
+    // --- МОДАЛКА ОПЛАТЫ АБОНЕМЕНТА ---
+    function openPaySubModal(studentId) {
+      currentPayStudentId = studentId;
+      const st = records.find(r => r.id === studentId);
+      if (!st) return;
+
+      document.getElementById('payModalTitle').innerText = `Оплата — ${st.student}`;
+      const sub = subscriptions.find(s => s.id === st.subId);
+      const subNum = st.subNumber || '№18744912';
+      const rem = st.remainingLessons || 0;
+      const totalLessons = sub ? sub.lessonsCount : 12;
+
+      document.getElementById('payCardDetails').innerText = `Ост. ${rem}/${totalLessons} зан. ${st.paidTotal || 0} ₽ (Аб. ${subNum})`;
+      document.getElementById('payCardStatus').innerText = rem > 0 ? 'Активен' : 'Завершен / 0 зан.';
+      document.getElementById('payCardStatus').style.color = rem > 0 ? '#10b981' : '#ef4444';
+
+      const grpSelect = document.getElementById('payGroupSelect');
+      grpSelect.innerHTML = '';
+      if (!st.groups || st.groups.length === 0) {
+        grpSelect.innerHTML = '<option value="">-- Группа не назначена --</option>';
+      } else {
+        st.groups.forEach(gId => {
+          const g = groups.find(x => x.id === gId);
+          if (g) grpSelect.innerHTML += `<option value="${g.id}">${g.name} (${g.program})</option>`;
+        });
+      }
+
+      const tarSelect = document.getElementById('payTariffSelect');
+      tarSelect.innerHTML = subscriptions.map(s => `
+        <option value="${s.id}" data-price="${s.price}" data-lessons="${s.lessonsCount}">
+          ${s.name} ( ${s.price} ₽ ${s.lessonsCount} занятия )
+        </option>
+      `).join('');
+
+      document.getElementById('paySaleDate').value = '2026-09-29';
+      document.getElementById('payDiscountType').value = 'none';
+      document.getElementById('payDiscountValue').value = 0;
+
+      calcFinalPayment();
+      document.getElementById('modalPaySubBackdrop').classList.add('show');
+    }
+
+    function calcFinalPayment() {
+      const tarSelect = document.getElementById('payTariffSelect');
+      const selectedOpt = tarSelect.options[tarSelect.selectedIndex];
+      if (!selectedOpt) return;
+
+      const basePrice = parseInt(selectedOpt.getAttribute('data-price')) || 6000;
+      const discType = document.getElementById('payDiscountType').value;
+      const discVal = parseFloat(document.getElementById('payDiscountValue').value) || 0;
+
+      let finalPrice = basePrice;
+      if (discType === 'percent') finalPrice = Math.round(basePrice * (1 - discVal / 100));
+      else if (discType === 'amount') finalPrice = Math.max(0, basePrice - discVal);
+
+      document.getElementById('payFinalAmount').value = finalPrice;
+    }
+
+    function handlePaySubSubmit(e) {
+      e.preventDefault();
+      const st = records.find(r => r.id === currentPayStudentId);
+      if (!st) return;
+
+      const tarSelect = document.getElementById('payTariffSelect');
+      const subId = parseInt(tarSelect.value);
+      const sub = subscriptions.find(s => s.id === subId);
+      const finalPaid = parseInt(document.getElementById('payFinalAmount').value) || 0;
+      const addedLessons = sub ? sub.lessonsCount : 4;
+
+      st.subId = subId;
+      st.paidTotal = (st.paidTotal || 0) + finalPaid;
+      st.remainingLessons = (st.remainingLessons || 0) + addedLessons;
+      st.subNumber = `№${Math.floor(10000000 + Math.random() * 90000000)}`;
+
+      const chosenGrpId = parseInt(document.getElementById('payGroupSelect').value);
+      if (chosenGrpId && (!st.groups || !st.groups.includes(chosenGrpId))) {
+        if (!st.groups) st.groups = [];
+        st.groups.push(chosenGrpId);
+      }
+
+      saveStorage();
+      closePaySubModal();
+      renderRecords();
+      renderGroups();
+      if (currentActiveStudentId === st.id) renderStudentProfile();
+      alert(`Оплата успешно внесена! Добавлено ${addedLessons} занятий. Новый баланс: ${st.remainingLessons} зан.`);
+    }
+
+    function closePaySubModal() {
+      document.getElementById('modalPaySubBackdrop').classList.remove('show');
+    }
+
+    // --- МОДАЛКА ВЫБОРА 12 ДАТ ---
+    function openBookingDatesModal(studentId) {
+      const st = records.find(r => r.id === studentId);
+      if (!st) return;
+
+      const grp = groups.find(g => st.groups && st.groups.includes(g.id));
+      if (!grp) {
+        alert("Нельзя делать запись пока не выбрана группа!");
+        return;
+      }
+
+      document.getElementById('mbStudentGroup').innerText = `Ученик: ${st.student} (${grp.program} — ${grp.name})`;
+      document.getElementById('mbSubInfo').innerText = `Выбирайте окна занятий согласно дню недели группы (${grp.dayOfWeek}):`;
+
+      if (!st.subscriptionSlots) st.subscriptionSlots = {};
+      const container = document.getElementById('bookingSlotsList');
+      container.innerHTML = '';
+
+      const dates = generate12Dates(grp.dayOfWeek);
+
+      dates.forEach((dItem, index) => {
+        const isBooked = st.subscriptionSlots[dItem.isoDate] === 'booked';
+        const col = document.createElement('div');
+        col.className = 'slot-column';
+
+        col.innerHTML = `
+          <div>
+            <div class="slot-date">${dItem.display}</div>
+            <div class="slot-time">${grp.time}</div>
+          </div>
+          <button type="button" class="slot-box-btn ${isBooked ? 'booked':''}" onclick="toggleBookingSlot(${studentId}, '${dItem.isoDate}', this)">
+            ${isBooked ? '✓' : ''}
+          </button>
+          <div style="font-size: 10px; color:#64748b;">Урок ${index + 1}</div>
+        `;
+        container.appendChild(col);
+      });
+
+      document.getElementById('modalBookingDatesBackdrop').classList.add('show');
+    }
+
+    function toggleBookingSlot(studentId, isoDate) {
+      const st = records.find(r => r.id === studentId);
+      if (!st) return;
+      if (!st.subscriptionSlots) st.subscriptionSlots = {};
+      if (!st.bookedDates) st.bookedDates = [];
+
+      if (st.subscriptionSlots[isoDate] === 'booked') {
+        delete st.subscriptionSlots[isoDate];
+        st.bookedDates = st.bookedDates.filter(d => d !== isoDate);
+      } else {
+        st.subscriptionSlots[isoDate] = 'booked';
+        if (!st.bookedDates.includes(isoDate)) st.bookedDates.push(isoDate);
+      }
+
+      st.bookedDates.sort();
+      saveStorage();
+      openBookingDatesModal(studentId);
+      renderRecords();
+      renderLessons();
+      if (currentActiveStudentId === st.id) renderStudentProfile();
+    }
+
+    function generate12Dates(dayOfWeekName) {
+      const daysMap = { 'Воскресенье': 0, 'Понедельник': 1, 'Вторник': 2, 'Среда': 3, 'Четверг': 4, 'Пятница': 5, 'Суббота': 6 };
+      const targetDay = daysMap[dayOfWeekName] !== undefined ? daysMap[dayOfWeekName] : 5;
+      const res = [];
+      const cur = new Date(2026, 8, 28);
+      while (cur.getDay() !== targetDay) cur.setDate(cur.getDate() + 1);
+
+      for (let i = 0; i < 12; i++) {
+        const d = String(cur.getDate()).padStart(2, '0');
+        const m = String(cur.getMonth() + 1).padStart(2, '0');
+        const y = cur.getFullYear();
+        const shortDays = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+        res.push({
+          isoDate: `${y}-${m}-${d}`,
+          display: `${shortDays[cur.getDay()]}, ${d}/${m}`
+        });
+        cur.setDate(cur.getDate() + 7);
+      }
+      return res;
+    }
+
+    function closeBookingModal() {
+      document.getElementById('modalBookingDatesBackdrop').classList.remove('show');
+    }
+
+    function openAddStudentsModal(groupId) {
+      currentTargetGroupId = groupId;
+      const grp = groups.find(g => g.id === groupId);
+      document.getElementById('addStudentsModalTitle').innerText = `Запись в группу: ${grp.name} (${grp.program})`;
+
+      const list = document.getElementById('studentSelectList');
+      list.innerHTML = '';
+      const availableStudents = records.filter(r => !r.archived);
+
+      availableStudents.forEach(st => {
+        if (!st.groups) st.groups = [];
+        const isInGroup = st.groups.includes(groupId);
+        const otherGroupNames = st.groups
+          .filter(id => id !== groupId)
+          .map(id => groups.find(g => g.id === id)?.name)
+          .filter(Boolean)
+          .join(', ');
+
+        const item = document.createElement('div');
+        item.className = 'student-select-item';
+        item.innerHTML = `
+          <div>
+            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">
+              <span class="student-clickable-link" onclick="openStudentProfile(${st.id})">👤 ${escapeHtml(st.student)}</span>
+            </div>
+            <div>
+              ${st.groups.length === 0 
+                ? '<span class="badge-no-group">🟢 Новый (без группы)</span>' 
+                : `<span class="badge-has-group">🔵 В группе: ${escapeHtml(otherGroupNames || grp.name)}</span>`}
+            </div>
+          </div>
+          <div>
+            <button 
+              type="button" 
+              style="padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; ${isInGroup ? 'background:#fee2e2; color:#b91c1c;' : 'background:#10b981; color:#fff;'}"
+              onclick="toggleStudentInGroup(${st.id})">
+              ${isInGroup ? 'Удалить ✕' : '+ Записать'}
+            </button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+
+      document.getElementById('modalAddStudentsBackdrop').classList.add('show');
+    }
+
+    function toggleStudentInGroup(studentId) {
+      const student = records.find(r => r.id === studentId);
+      if (!student) return;
+      if (!student.groups) student.groups = [];
+
+      const idx = student.groups.indexOf(currentTargetGroupId);
+      if (idx > -1) {
+        student.groups.splice(idx, 1);
+        student.bookedDates = [];
+        student.subscriptionSlots = {};
+      } else {
+        student.groups.push(currentTargetGroupId);
+      }
+      saveStorage();
+      openAddStudentsModal(currentTargetGroupId);
+      renderGroups();
+      renderRecords();
+    }
+    function closeAddStudentsModal() {
+      document.getElementById('modalAddStudentsBackdrop').classList.remove('show');
+    }
+
+    function updateRecordStatus(id, s) {
+      const r = records.find(x => x.id === id);
+      if (r) { r.recordStatus = s; saveStorage(); renderRecords(); }
+    }
+    function setRecordFilter(f, btn) {
+      currentRecordFilter = f;
+      document.querySelectorAll('#sectionRecords .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderRecords();
+    }
+
+    function openRecordModal() {
+      document.getElementById('recordForm').reset();
+      const grpSel = document.getElementById('fGroupSelect');
+      grpSel.innerHTML = '<option value="">-- Без группы --</option>' + groups.map(g => `<option value="${g.id}">${g.program} — ${g.name}</option>`).join('');
+      const subSel = document.getElementById('fSubSelect');
+      subSel.innerHTML = subscriptions.map(s => `<option value="${s.id}">${s.name} (${s.lessonsCount} зан. — ${s.price} ₽)</option>`).join('');
+      document.getElementById('modalRecordBackdrop').classList.add('show');
+    }
+    function closeRecordModal() {
+      document.getElementById('modalRecordBackdrop').classList.remove('show');
+    }
+    function handleRecordSubmit(e) {
+      e.preventDefault();
+      const grpId = document.getElementById('fGroupSelect').value ? parseInt(document.getElementById('fGroupSelect').value) : null;
+      const subId = parseInt(document.getElementById('fSubSelect').value);
+      const sub = subscriptions.find(s => s.id === subId);
+
+      records.unshift({
+        id: Date.now(),
+        student: document.getElementById('fStudent').value.trim(),
+        studentStatus: "Новый",
+        parent: document.getElementById('fParent').value.trim(),
+        phone: document.getElementById('fPhone').value.trim(),
+        age: parseInt(document.getElementById('fAge').value) || null,
+        recordStatus: "enrolled",
+        note: document.getElementById('fNote').value.trim(),
+        archived: false,
+        groups: grpId ? [grpId] : [],
+        subId: subId,
+        subNumber: `№${Math.floor(10000000 + Math.random() * 90000000)}`,
+        paidTotal: sub ? sub.price : 0,
+        earnedTotal: 0,
+        remainingLessons: sub ? sub.lessonsCount : 0,
+        bookedDates: [],
+        subscriptionSlots: {}
+      });
+      saveStorage();
+      closeRecordModal();
+      renderRecords();
+    }
+
+    function escapeHtml(t) {
+      const d = document.createElement('div');
+      d.textContent = t;
+      return d.innerHTML;
+    }
+
+    // Запуск приложения
+    renderRecords();
+  </script>
+</body>
+</html>
